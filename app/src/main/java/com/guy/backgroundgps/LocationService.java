@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -18,9 +19,13 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.gson.Gson;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.Locale;
 
 public class LocationService extends Service {
 
@@ -33,7 +38,9 @@ public class LocationService extends Service {
     public static final String PAUSE_FOREGROUND_SERVICE = "PAUSE_FOREGROUND_SERVICE";
     public static final String STOP_FOREGROUND_SERVICE = "STOP_FOREGROUND_SERVICE";
 
-    public boolean isServiceRunningRightNow = false;
+    private NotificationCompat.Builder notificationBuilder;
+
+    private boolean isServiceRunningRightNow = false;
 
     @Override
     public void onCreate() {
@@ -63,24 +70,34 @@ public class LocationService extends Service {
     }
 
     MyClockTickerV4.CycleTicker clockRefresh = new MyClockTickerV4.CycleTicker() {
-        @Override
-        public void secondly(int repeatsRemaining) {
-            Log.d("pttt", "Clock");
-        }
+            @Override
+            public void secondly(int repeatsRemaining) {
+                Log.d("pttt", "Clock= ");
+                gotNewLocation();
+            }
 
-        @Override
-        public void done() {
+            @Override
+            public void done() {
 
-        }
-    };
+            }
+        };
+
+    private void gotNewLocation() {
+        Intent intent = new Intent(MainActivity.BROADCAST_NEW_LOCATION_DETECTED);
+        intent.putExtra("EXTRA_LOCATION", "Jerusalem");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+        notificationBuilder.setContentText("Current city: " + "Jerusalem");
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+    }
 
     private void stopRecording() {
         MyClockTickerV4.getInstance().removeCallback(clockRefresh);
     }
 
     private void startRecording() {
-
-        MyClockTickerV4.getInstance().addCallback(clockRefresh, MyClockTickerV4.CONTINUOUSLY_REPEATS, 1000);
+        MyClockTickerV4.getInstance().addCallback(clockRefresh, MyClockTickerV4.CONTINUOUSLY_REPEATS, 5000);
     }
 
     @Override
@@ -127,19 +144,19 @@ public class LocationService extends Service {
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        final NotificationCompat.Builder builder = getNotificationBuilder(this,
+        notificationBuilder = getNotificationBuilder(this,
                 CHANNEL_ID,
                 NotificationManagerCompat.IMPORTANCE_LOW); //Low importance prevent visual appearance for this notification channel on top
 
-        builder.setContentIntent(pendingIntent) // Open activity
+        notificationBuilder.setContentIntent(pendingIntent) // Open activity
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_sattelite)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher_round))
-                .setContentTitle("Title")
+                .setContentTitle("App in progress")
                 .setContentText("Content")
         ;
 
-        Notification notification = builder.build();
+        Notification notification = notificationBuilder.build();
 
         startForeground(NOTIFICATION_ID, notification);
 

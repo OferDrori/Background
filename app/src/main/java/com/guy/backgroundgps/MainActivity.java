@@ -2,13 +2,18 @@ package com.guy.backgroundgps;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.TextViewCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -25,14 +30,28 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String BROADCAST_NEW_LOCATION_DETECTED = "guy.cyclingtracker.NEW_LOCATION_DETECTED";
+
     private final int LOCATION_PERMISSIONS_REQUEST_CODE = 125;
 
     private AppCompatButton main_BTN_start;
     private AppCompatButton main_BTN_pause;
     private AppCompatButton main_BTN_stop;
     private AppCompatButton main_BTN_info;
+    private AppCompatTextView main_LBL_info;
+    private LocalBroadcastManager localBroadcastManager;
 
-    private int clock = 0;
+
+    private BroadcastReceiver myReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(BROADCAST_NEW_LOCATION_DETECTED)) {
+                String city = intent.getStringExtra("EXTRA_LOCATION");
+
+                newLocation(city);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,64 +63,31 @@ public class MainActivity extends AppCompatActivity {
 
         findViews();
         initViews();
-
-//        MyClockTickerV4.CycleTicker clockRefresh = new MyClockTickerV4.CycleTicker() {
-//            @Override
-//            public void secondly(int repeatsRemaining) {
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Log.d("pttt", "Clock= " + clock++);
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void done() {
-//
-//            }
-//        };
-//        MyClockTickerV4.getInstance().addCallback(clockRefresh, MyClockTickerV4.CONTINUOUSLY_REPEATS, 1000);
-//
-//        MyClockTickerV4.getInstance().removeCallback(clockRefresh);
-
-//        new Timer().schedule(
-//                new java.util.TimerTask() {
-//                    @Override
-//                    public void run() {
-//                        Log.d("pttt", "Clock= " + clock++);
-//                    }
-//                },
-//                0, 1000
-//        );
-
-//        new Timer().scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Log.d("pttt", "Clock= " + clock++);
-//            }
-//        }, 0, 1000);
-
-//        final Handler myHandler = new Handler();
-//        myHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                myHandler.postDelayed(this, 1000);
-//                Log.d("pttt", "Clock= " + clock++);
-//            }
-//        }, 1000);
-
-
-        ActivityCompat.requestPermissions(MainActivity.this,
-                new String[]{
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                        ,Manifest.permission.ACCESS_FINE_LOCATION
-                        ,Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                        ,Manifest.permission.FOREGROUND_SERVICE
-                },
-                LOCATION_PERMISSIONS_REQUEST_CODE);
-
+        askLocationPermissions();
         validateButtons();
+    }
+
+    private void newLocation(final String city) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                main_LBL_info.setText(city);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter(BROADCAST_NEW_LOCATION_DETECTED);
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        localBroadcastManager.registerReceiver(myReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        localBroadcastManager.unregisterReceiver(myReceiver);
     }
 
     private void validateButtons() {
@@ -133,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         return false;
     }
-
-
 
     private void startService() {
         actionToService(LocationService.START_FOREGROUND_SERVICE);
@@ -168,6 +152,17 @@ public class MainActivity extends AppCompatActivity {
 
 
     // // // // // // // // // // // // // // // // Permissions  // // // // // // // // // // // // // // //
+
+    private void askLocationPermissions() {
+        ActivityCompat.requestPermissions(MainActivity.this,
+                new String[]{
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                        ,Manifest.permission.ACCESS_FINE_LOCATION
+                        ,Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        ,Manifest.permission.FOREGROUND_SERVICE
+                },
+                LOCATION_PERMISSIONS_REQUEST_CODE);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -237,5 +232,6 @@ public class MainActivity extends AppCompatActivity {
         main_BTN_pause = findViewById(R.id.main_BTN_pause);
         main_BTN_stop = findViewById(R.id.main_BTN_stop);
         main_BTN_info = findViewById(R.id.main_BTN_info);
+        main_LBL_info = findViewById(R.id.main_LBL_info);
     }
 }

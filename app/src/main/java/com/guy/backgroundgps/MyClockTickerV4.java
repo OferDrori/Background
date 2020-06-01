@@ -198,3 +198,52 @@ public class MyClockTickerV4 {
         }
     }
 }
+
+/*
+
+//        MyClockTickerV4.CycleTicker clockRefresh = new MyClockTickerV4.CycleTicker() {
+//            @Override
+//            public void secondly(int repeatsRemaining) {
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Log.d("pttt", "Clock= " + clock++);
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void done() {
+//
+//            }
+//        };
+//        MyClockTickerV4.getInstance().addCallback(clockRefresh, MyClockTickerV4.CONTINUOUSLY_REPEATS, 1000);
+//
+//        MyClockTickerV4.getInstance().removeCallback(clockRefresh);
+
+//        new Timer().schedule(
+//                new java.util.TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        Log.d("pttt", "Clock= " + clock++);
+//                    }
+//                },
+//                0, 1000
+//        );
+
+//        new Timer().scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//                Log.d("pttt", "Clock= " + clock++);
+//            }
+//        }, 0, 1000);
+
+//        final Handler myHandler = new Handler();
+//        myHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                myHandler.postDelayed(this, 1000);
+//                Log.d("pttt", "Clock= " + clock++);
+//            }
+//        }, 1000);
+ */
