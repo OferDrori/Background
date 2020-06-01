@@ -8,19 +8,31 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 
 import java.io.FileDescriptor;
@@ -41,6 +53,29 @@ public class LocationService extends Service {
     private NotificationCompat.Builder notificationBuilder;
 
     private boolean isServiceRunningRightNow = false;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback = new LocationCallback() {
+
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            super.onLocationResult(locationResult);
+
+            if (locationResult.getLastLocation() != null) {
+                newLocation(locationResult.getLastLocation());
+            } else {
+                Log.d("pttt", "Location information isn't available.");
+            }
+        }
+
+        @Override
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            super.onLocationAvailability(locationAvailability);
+            Toast.makeText(LocationService.this, "Loc= " + locationAvailability.isLocationAvailable(), Toast.LENGTH_SHORT).show();
+            locationAvailability.isLocationAvailable();
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -69,35 +104,49 @@ public class LocationService extends Service {
         return START_STICKY;
     }
 
-    MyClockTickerV4.CycleTicker clockRefresh = new MyClockTickerV4.CycleTicker() {
-            @Override
-            public void secondly(int repeatsRemaining) {
-                Log.d("pttt", "Clock= ");
-                gotNewLocation();
-            }
-
-            @Override
-            public void done() {
-
-            }
-        };
-
-    private void gotNewLocation() {
+    private void newLocation(Location lastLocation) {
         Intent intent = new Intent(MainActivity.BROADCAST_NEW_LOCATION_DETECTED);
-        intent.putExtra("EXTRA_LOCATION", "Jerusalem");
+
+        String json = new Gson().toJson(new MyLoc(lastLocation));
+        intent.putExtra("EXTRA_LOCATION", json);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
-        notificationBuilder.setContentText("Current city: " + "Jerusalem");
+        notificationBuilder.setContentText("Current speed: " + String.format("%.2f", lastLocation.getSpeed() * 3.6) + " kph");
         final NotificationManager notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
 
     private void stopRecording() {
-        MyClockTickerV4.getInstance().removeCallback(clockRefresh);
+        if (fusedLocationProviderClient != null) {
+            Task<Void> task = fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+            task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Log.d("pttt", "stop Location Callback removed.");
+                        stopSelf();
+                    } else {
+                        Log.d("pttt", "stop Failed to remove Location Callback.");
+                    }
+                }
+            });
+        }
     }
 
     private void startRecording() {
-        MyClockTickerV4.getInstance().addCallback(clockRefresh, MyClockTickerV4.CONTINUOUSLY_REPEATS, 5000);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationRequest = new LocationRequest();
+            locationRequest.setSmallestDisplacement(1.0f);
+            locationRequest.setInterval(5000);
+            locationRequest.setFastestInterval(5000);
+            //locationRequest.setMaxWaitTime(TimeUnit.MINUTES.toMillis(2));
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
 
     @Override
@@ -202,3 +251,17 @@ public class LocationService extends Service {
         }
     }
 }
+
+/*
+Method to detect if user has selected “Don’t Ask Again” while requesting for permission:
+https://blog.usejournal.com/method-to-detect-if-user-has-selected-dont-ask-again-while-requesting-for-permission-921b95ded536
+
+Android Turn on GPS programmatically:
+https://medium.com/@droidbyme/android-turn-on-gps-programmatically-d585cf29c1ef
+
+Get Current location using FusedLocationProviderClient in Android:
+https://medium.com/@droidbyme/get-current-location-using-fusedlocationproviderclient-in-android-cb7ebf5ab88e
+
+Full library that implements location and permission:
+https://github.com/klaasnotfound/LocationAssistant/tree/master/app/src/main/res/values
+ */

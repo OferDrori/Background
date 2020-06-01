@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import java.util.List;
 import java.util.Timer;
@@ -46,9 +49,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(BROADCAST_NEW_LOCATION_DETECTED)) {
-                String city = intent.getStringExtra("EXTRA_LOCATION");
-
-                newLocation(city);
+                String json = intent.getStringExtra("EXTRA_LOCATION");
+                try {
+                    MyLoc lastLocation = new Gson().fromJson(json, MyLoc.class);
+                    newLocation(lastLocation);
+                } catch(Exception ex) { }
             }
         }
     };
@@ -67,11 +72,11 @@ public class MainActivity extends AppCompatActivity {
         validateButtons();
     }
 
-    private void newLocation(final String city) {
+    private void newLocation(final MyLoc lastLocation) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                main_LBL_info.setText(city);
+                main_LBL_info.setText(lastLocation.getLatitude() + "\n" + lastLocation.getLongitude());
             }
         });
     }
