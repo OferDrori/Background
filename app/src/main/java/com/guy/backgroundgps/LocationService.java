@@ -55,7 +55,7 @@ public class LocationService extends Service {
     private boolean isServiceRunningRightNow = false;
 
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationRequest locationRequest;
+    private LocationRequest locationRequest;//FSDFSD
     private LocationCallback locationCallback = new LocationCallback() {
 
         @Override
