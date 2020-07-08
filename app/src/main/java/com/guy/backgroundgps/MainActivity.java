@@ -23,9 +23,13 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
+import com.guy.backgroundgps.settings.Tracker;
 
 import java.util.List;
 import java.util.Timer;
@@ -43,6 +47,16 @@ public class MainActivity extends AppCompatActivity {
     private AppCompatButton main_BTN_info;
     private AppCompatTextView main_LBL_info;
     private LocalBroadcastManager localBroadcastManager;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("User");
+    Tracker tracker;
+    EditText addPhoneNumberEditText;
+    EditText addNameEditText;
+    Button addphoneBtn;
+    String name="";
+    String phoneNumber="anonimus";
+
+
 
 
     private BroadcastReceiver myReceiver = new BroadcastReceiver() {
@@ -53,10 +67,20 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     MyLoc lastLocation = new Gson().fromJson(json, MyLoc.class);
                     newLocation(lastLocation);
+                    sentLoationTofirebace(lastLocation);
                 } catch(Exception ex) { }
             }
         }
     };
+
+    private void sentLoationTofirebace( MyLoc lastLocation) {
+        tracker.setPhoneNumber(phoneNumber);
+        tracker.setTrackerName(name);
+        tracker.setLatitude(lastLocation.getLatitude());
+        tracker.setLongitude(lastLocation.getLongitude());
+        myRef.child("Trackers").child(tracker.getPhoneNumber()).setValue(tracker);
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,17 +89,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-
+        tracker=new Tracker();
         findViews();
         initViews();
         askLocationPermissions();
         validateButtons();
+        addphoneBtn.setOnClickListener(addPhone);
+
     }
+
+    View.OnClickListener addPhone = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            phoneNumber=addPhoneNumberEditText.getText().toString();
+            name=addNameEditText.getText().toString();
+        }
+    };
 
     private void newLocation(final MyLoc lastLocation) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
                 main_LBL_info.setText(lastLocation.getLatitude() + "\n" + lastLocation.getLongitude());
             }
         });
@@ -238,5 +274,10 @@ public class MainActivity extends AppCompatActivity {
         main_BTN_stop = findViewById(R.id.main_BTN_stop);
         main_BTN_info = findViewById(R.id.main_BTN_info);
         main_LBL_info = findViewById(R.id.main_LBL_info);
+        addPhoneNumberEditText=findViewById(R.id.editTextPhone);
+        addphoneBtn=findViewById(R.id.addPhoneButton);
+        addNameEditText=findViewById(R.id.addNameEditText);
+
+
     }
 }

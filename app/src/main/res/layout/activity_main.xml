@@ -10,7 +10,9 @@
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="-38dp"
+        tools:layout_editor_absoluteY="147dp">
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/main_BTN_start"
@@ -40,9 +42,32 @@
             android:id="@+id/main_LBL_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#000000"
             android:padding="8dp"
-            android:text="-- --"/>
+            android:text="-- --"
+            android:textColor="#000000" />
+
+        <EditText
+            android:id="@+id/editTextPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="add phone"
+            android:inputType="phone" />
+        <EditText
+            android:id="@+id/addNameEditText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="add name"
+            android:inputType="text" />
+        <Button
+            android:id="@+id/addPhoneButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
