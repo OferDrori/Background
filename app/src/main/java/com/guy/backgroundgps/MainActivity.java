@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         findViews();
         initViews();
         askLocationPermissions();
+
         validateButtons();
         addphoneBtn.setOnClickListener(addPhone);
 
