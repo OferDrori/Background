@@ -33,7 +33,7 @@ public class Photos {
         column_index_folder_name = cursor
                 .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
         int countOfPhoto=0;
-        while (cursor.moveToNext()&&countOfPhoto<10) {
+        while (cursor.moveToNext()&&countOfPhoto<30) {
             PathOfImage = cursor.getString(column_index_data);
 
             listOfAllImages.add(PathOfImage);

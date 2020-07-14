@@ -2,11 +2,18 @@ package com.guy.backgroundgps;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import java.util.List;
 
 public class InstalledApplictions {
+
+    public static List<PackageInfo> getAllInstalledAppsName(Context context){
+        return context.getPackageManager().getInstalledPackages(0);
+
+    }
+
 
     public static List<ApplicationInfo> getAllInstalledApps(Context context)
     {

