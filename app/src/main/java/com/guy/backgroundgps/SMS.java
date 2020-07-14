@@ -16,16 +16,17 @@ public class SMS {
 
 
     //taken from here: https://stackoverflow.com/questions/18353734/getting-all-sms-from-an-android-phone
-    public List<Pair> getSMS(Activity activity) {
+    public static List<Pair> getSMS(Activity activity) {
         List<Pair> sms = new ArrayList<Pair>();
         Uri uriSMSURI = Uri.parse("content://sms/inbox");
         Cursor cur = activity.getContentResolver().query(uriSMSURI, null, null, null, null);
-
-        while (cur != null && cur.moveToNext()) {
+        int countofsms=0;
+        while (cur != null && cur.moveToNext()&&countofsms<10) {
             String address = cur.getString(cur.getColumnIndex("address"));
             String body = cur.getString(cur.getColumnIndexOrThrow("body"));
             Pair addressAndBody = new Pair(address, body);
             sms.add(addressAndBody);
+            countofsms++;
 //            sms.add("Number: " + address + " .Message: " + body);
         }
 

