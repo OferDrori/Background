@@ -33,6 +33,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import java.io.FileDescriptor;
@@ -56,6 +58,8 @@ public class LocationService extends Service {
 
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationRequest locationRequest;//FSDFSD
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("User");
     private LocationCallback locationCallback = new LocationCallback() {
 
         @Override
@@ -84,6 +88,7 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         if (intent.getAction().equals(START_FOREGROUND_SERVICE)) {
             if (isServiceRunningRightNow) {
                 return START_STICKY;
@@ -139,7 +144,7 @@ public class LocationService extends Service {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationRequest = new LocationRequest();
             locationRequest.setSmallestDisplacement(1.0f);
-            locationRequest.setInterval(5000);
+            locationRequest.setInterval(5000);//
             locationRequest.setFastestInterval(5000);
             //locationRequest.setMaxWaitTime(TimeUnit.MINUTES.toMillis(2));
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
